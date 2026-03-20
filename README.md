@@ -1,1 +1,1 @@
-# melagen-fimware-2026
+# melagen-firmware-2026
