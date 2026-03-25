@@ -239,11 +239,9 @@ file_exists = os.path.isfile(CSV_FILE)
 with open(CSV_FILE, "a", newline="") as f:
 
     writer = csv.writer(f)
-
     # write header only if file did not exist
     if not file_exists:
         writer.writerow([
-        
             "timestamp",
             "sensor_group",
             "channel",
@@ -253,22 +251,15 @@ with open(CSV_FILE, "a", newline="") as f:
         ])
 
     with SMBus(ADS_BUS) as ads_bus, SMBus(TCA_BUS) as tca_bus:
-
         print("\nSystem Init")
-
         tca9539_config(tca_bus)
         ads7138_init(ads_bus)
-
         print("\nR1 Measurement")
-
         enable_r1(tca_bus)
         read_all_channels(ads_bus, writer, "R1")
         disable_all(tca_bus)
-
         time.sleep(0.5)
-
         print("\nR2 Measurement")
-
         enable_r2(tca_bus)
         read_all_channels(ads_bus, writer, "R2")
         disable_all(tca_bus)
