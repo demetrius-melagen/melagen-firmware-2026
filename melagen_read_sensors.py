@@ -46,22 +46,23 @@ REG_CHANNEL_SEL  = 0x11
 # ==========================================================
 # TCA9539 BIT DEFINITIONS
 # ==========================================================
-P00_D3_EN = 1 << 0
-P01_D3_R1 = 1 << 1
-P02_D2_R2 = 1 << 2
-P03_D2_EN = 1 << 3
-P04_D2_R1 = 1 << 4
-P05_D1_R2 = 1 << 5
-P06_D1_EN = 1 << 6
-P07_D1_R1 = 1 << 7
+P00_FET1_CTL = 1 << 0
+P01_FET1_R1 = 1 << 1
+P02_FET1_R2 = 1 << 2
+P03_FET2_CTL = 1 << 3
+P04_FET2_R1 = 1 << 4
+P05_FET2_R2 = 1 << 5
+P06_FET3_CTL = 1 << 6
+P07_FET3_R1 = 1 << 7
 
-P11_D5_R1 = 1 << 1
-P12_D5_EN = 1 << 2
-P13_D5_R2 = 1 << 3
-P14_D4_R1 = 1 << 4
-P15_D4_EN = 1 << 5
-P16_D4_R2 = 1 << 6
-P17_D3_R2 = 1 << 7
+P10_FET3_R2 = 1 << 0
+P11_FET4_CTL = 1 << 1
+P12_FET4_R1 = 1 << 2
+P13_FET4_R2 = 1 << 3
+P14_FET5_CTL = 1 << 4
+P15_FET5_R1 = 1 << 5
+P16_FET5_R2 = 1 << 6
+
 
 # ==========================================================
 # ADS7138 LOW LEVEL COMMANDS
@@ -150,8 +151,8 @@ def enable_r1(bus):
 
     print("\nEnabling R1 sensors")
 
-    port0 = P00_D3_EN | P06_D1_EN | P03_D2_EN | P01_D3_R1 | P07_D1_R1 | P04_D2_R1
-    port1 = P15_D4_EN | P12_D5_EN | P14_D4_R1 | P11_D5_R1
+    port0 = P00_FET1_CTL | P01_FET1_R1 | P03_FET2_CTL | P04_FET2_R1 | P06_FET3_CTL | P07_FET3_R1
+    port1 = P11_FET4_CTL | P12_FET4_R1 | P14_FET5_CTL | P15_FET5_R1
 
     update_io_expander(bus, port0, port1)
 
@@ -162,8 +163,9 @@ def enable_r2(bus):
 
     print("\nEnabling R2 sensors")
 
-    port0 = P00_D3_EN | P06_D1_EN | P03_D2_EN | P05_D1_R2 | P02_D2_R2
-    port1 = P15_D4_EN | P12_D5_EN | P17_D3_R2 | P16_D4_R2 | P13_D5_R2
+    port0 = P00_FET1_CTL | P02_FET1_R2 | P03_FET2_CTL | P05_FET2_R2 | P06_FET3_CTL
+    port1 = P10_FET3_R2 | P11_FET4_CTL | P13_FET4_R2 | P14_FET5_CTL | P16_FET5_R2
+
 
     update_io_expander(bus, port0, port1)
 
