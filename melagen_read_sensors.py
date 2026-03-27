@@ -202,26 +202,26 @@ def read_all_channels(bus, csv_writer, sensor_group):
 
 	print("\nADC READINGS")
 	results=[]
-	for ch in range(8):
+	for ch in range(2,7):
 
 		ads_write_reg(bus, REG_CHANNEL_SEL, ch)
 		confirm = ads_read_reg(bus, REG_CHANNEL_SEL)
 
 		if confirm != ch:
-			results.append(f"CH{ch}:FAIL")
+			results.append(f"CH{ch-1}:FAIL")
 			continue	
 
 		raw, voltage, dose = ads_read_adc(bus)
 
 		if raw is None:
-			results.append(f"CH{ch}:FAIL")
+			results.append(f"CH{ch-1}:FAIL")
 		else:
-			results.append(f"CH{ch}:{raw} ({voltage:.3f}V) ({dose:.3f}rad)")
+			results.append(f"CH{ch-1}:{raw} ({voltage:.3f}V) ({dose:.3f}rad)")
 			
 			csv_writer.writerow([
 				datetime.now().isoformat(),
 				sensor_group,
-				ch,
+				(ch-1),
 				raw,
 				voltage,
 				dose
