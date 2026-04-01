@@ -1,0 +1,9 @@
+[Unit]
+Description=Reading all 5 dosimeter every 60 seconds
+[Timer]
+OnBootSec=60s
+OnUnitActiveSec=60s
+AccuracySec=10ms
+Unit=dosimeter_read.service
+[Install]
+WantedBy=timers.target

@@ -1,0 +1,8 @@
+[Unit]
+Description: Dosimeter Sensor Reading Service
+[Service]
+Type=simple
+User=melagen
+Environment=PYTHONPATH=/home/melagen/.local/lib/python3.10/site-packages
+WorkingDirectory=/home/melagen/Desktop/melagen-firmware-2026-main/
+ExecStart=/usr/bin/python /home/melagen/Desktop/melagen-firmware-2026-main/melagen_read_sensors

@@ -1,0 +1,35 @@
+#To add service and timer to the Systemd service
+1) Copy the dosimeter_read.service and dosimeter_read.timer to /etc/systemd/system directory
+
+Terminal Command: cp dosimeter_read.service dosimeter_read.timer /etc/systemd/system
+
+2) Reload the systemd service modules
+
+Terminal Command: sudo systemctl daemon-reload
+
+3) Enable the systemd timer module (timer module is disabled by default)
+
+Terminal Command: sudo systemctl enable dosimeter_read.timer
+
+4) Start the systemd timer module (Once the timer module is enabled, we need to start it, it is stopped by default)
+
+Terminal Command: sudo systemctl start dosimeter_read.timer
+
+5) Check the status of the dosimeter_read.service to see whether it executes successfully or encounters a failure
+
+Terminal Command: sudo systemctl status dosimeter_read.service
+
+Normally, if it executes without an error, you will see a Green Light next to dosimeter_read.timer (status=0/SUCCESS), and it tells you when was the last executed time (XXs ago)
+
+#To stop and disable the scheduled service
+
+1) First, the timer service should be stopped first. The command below will stop the timer so the service will no longer be triggered. 
+
+Terminal Command: sudo systemctl stop dosimeter_read.timer
+
+Note that the timer is stopped in this session, but if the device reboots, the timer will start again.
+
+2) To completely disable the timer service, the command below will disable the timer altogether
+
+Terminal Command: sudo systemctl disable dosimeter_read.timer
+
