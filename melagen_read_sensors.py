@@ -7,26 +7,32 @@ from datetime import datetime
 CSV_FILE = "radfet_measurements.csv"
 
 # ==========================================================
-# I2C BUS DEFINITIONS
+# Dosimeter Calibration Variables
+# ==========================================================
+A=0.02951
+B=0.45509
+
+# ==========================================================
+# I2C Bus Definitions
 # ==========================================================
 ADS_BUS = 1
 TCA_BUS = 1
 
 # ==========================================================
-# DEVICE ADDRESSES
+# Device Addresses
 # ==========================================================
 TCA9539_ADDR = 0x74
 ADS_ADDR = 0x10
 VREF = 5.0
 
 # ==========================================================
-# ADS7138 OPCODES
+# ADS7138 Opcodes
 # ==========================================================
 ADS_OPCODE_READ  = 0x10
 ADS_OPCODE_WRITE = 0x08
 
 # ==========================================================
-# TCA9539 REGISTERS
+# TCA9539 Registers
 # ==========================================================
 REG_OUTPUT_PORT0 = 0x02
 REG_OUTPUT_PORT1 = 0x03
@@ -34,7 +40,7 @@ REG_CONFIG_PORT0 = 0x06
 REG_CONFIG_PORT1 = 0x07
 
 # ==========================================================
-# ADS7138 REGISTERS
+# ADS7138 Registers
 # ==========================================================
 REG_GENERAL_CFG  = 0x01
 REG_DATA_CFG     = 0x02
@@ -44,7 +50,7 @@ REG_SEQUENCE_CFG = 0x10
 REG_CHANNEL_SEL  = 0x11
 
 # ==========================================================
-# TCA9539 BIT DEFINITIONS
+# TCA9539 -> Dosimeter Bit Definitions
 # ==========================================================
 P00_FET1_CTL = 1 << 0
 P01_FET1_R1 = 1 << 1
@@ -65,7 +71,7 @@ P16_FET5_R2 = 1 << 6
 
 
 # ==========================================================
-# ADS7138 LOW LEVEL COMMANDS
+# ADS7138 Low Level Commands
 # ==========================================================
 def ads_write_reg(bus, reg, val):
     try:
@@ -105,8 +111,7 @@ def ads_read_adc(bus):
 
         raw = ((data[0] << 8) | data[1]) >> 4
         voltage = raw * VREF / 4095.0
-        A=0.02951
-        B=0.45509
+
         dose = (voltage / A) ** (1.0 / B)
     	# V = A * Dose^B  => Dose = (V/A)^(1/B)
         return raw, voltage, dose
@@ -117,7 +122,7 @@ def ads_read_adc(bus):
 
 
 # ==========================================================
-# TCA9539 CONTROL
+# TCA9539 Control
 # ==========================================================
 def tca_write(bus, reg, val):
     try:
@@ -166,7 +171,6 @@ def enable_r2(bus):
     port0 = P00_FET1_CTL | P02_FET1_R2 | P03_FET2_CTL | P05_FET2_R2 | P06_FET3_CTL
     port1 = P10_FET3_R2 | P11_FET4_CTL | P13_FET4_R2 | P14_FET5_CTL | P16_FET5_R2
 
-
     update_io_expander(bus, port0, port1)
 
     time.sleep(0.2)
@@ -196,7 +200,7 @@ def ads7138_init(bus):
 
 
 # ==========================================================
-# ADC CHANNEL READ + CSV SAVE
+# ADC Channel Read + CSV Save
 # ==========================================================
 def read_all_channels(bus, csv_writer, sensor_group):
 
@@ -231,7 +235,7 @@ def read_all_channels(bus, csv_writer, sensor_group):
 	print("|".join(results))
 
 # ==========================================================
-# MAIN SEQUENCE
+# Main Sequence
 # ==========================================================
 
 file_exists = os.path.isfile(CSV_FILE)
