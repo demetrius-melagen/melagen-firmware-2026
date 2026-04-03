@@ -70,6 +70,14 @@ P15_FET5_R1 = 1 << 5
 P16_FET5_R2 = 1 << 6
 
 # ==========================================================
+# R1 R2 Port Bitmasks
+# ==========================================================
+R1_PORT0 = P00_FET1_CTL | P01_FET1_R1 | P03_FET2_CTL | P04_FET2_R1 | P06_FET3_CTL | P07_FET3_R1
+R1_PORT1 = P11_FET4_CTL | P12_FET4_R1 | P14_FET5_CTL | P15_FET5_R1
+R2_PORT0 = P00_FET1_CTL | P02_FET1_R2 | P03_FET2_CTL | P05_FET2_R2 | P06_FET3_CTL
+R2_PORT1 = P10_FET3_R2 | P11_FET4_CTL | P13_FET4_R2 | P14_FET5_CTL | P16_FET5_R2
+
+# ==========================================================
 # ADS7138 Low Level Commands
 # ==========================================================
 def ads_write_reg(bus, reg, val):
@@ -149,26 +157,14 @@ def tca9539_config(bus):
 
 
 def enable_r1(bus):
-
     print("\nEnabling R1 sensors")
-
-    port0 = P00_FET1_CTL | P01_FET1_R1 | P03_FET2_CTL | P04_FET2_R1 | P06_FET3_CTL | P07_FET3_R1
-    port1 = P11_FET4_CTL | P12_FET4_R1 | P14_FET5_CTL | P15_FET5_R1
-
-    update_io_expander(bus, port0, port1)
-
+    update_io_expander(bus, R1_PORT0, R1_PORT1)
     time.sleep(0.2)
 
 
 def enable_r2(bus):
-
     print("\nEnabling R2 sensors")
-
-    port0 = P00_FET1_CTL | P02_FET1_R2 | P03_FET2_CTL | P05_FET2_R2 | P06_FET3_CTL
-    port1 = P10_FET3_R2 | P11_FET4_CTL | P13_FET4_R2 | P14_FET5_CTL | P16_FET5_R2
-
-    update_io_expander(bus, port0, port1)
-
+    update_io_expander(bus, R2_PORT0, R2_PORT1)
     time.sleep(0.2)
 
 
