@@ -4,6 +4,9 @@ from smbus2 import SMBus, i2c_msg
 import csv
 import os
 from datetime import datetime
+# ==========================================================
+# CSV
+# ==========================================================
 CSV_FILE = "radfet_measurements.csv"
 
 # ==========================================================
@@ -90,7 +93,6 @@ def ads_write_reg(bus, reg, val):
         print(f"ADS WR FAIL {e}")
         return False
 
-
 def ads_read_reg(bus, reg):
     try:
         cmd = i2c_msg.write(ADS_ADDR, [ADS_OPCODE_READ, reg])
@@ -102,7 +104,6 @@ def ads_read_reg(bus, reg):
     except Exception as e:
         print("ADS RD FAIL", e)
         return None
-
 
 def ads_read_adc(bus):
     try:
@@ -117,7 +118,6 @@ def ads_read_adc(bus):
     except Exception as e:
         print("ADC READ FAIL", e)
         return None, None, None
-
 
 # ==========================================================
 # TCA9539 Control
