@@ -131,15 +131,14 @@ def tca_write(bus, reg, val):
         print("TCA WRITE FAIL", e)
         return False
 
-def tca_read(bus, reg, val):
-    try:
-        bus.read_byte_data(TCA9539_ADDR, reg, val)
-        print(f"TCA RD 0x{reg:02X}=0x{val:02X} PASS")
-        return True
-    except Exception as e:
-        print("TCA READ FAIL", e)
-        return False
-
+# def tca_read(bus, reg, val):
+#     try:
+#         bus.read_byte_data(TCA9539_ADDR, reg, val)
+#         print(f"TCA RD 0x{reg:02X}=0x{val:02X} PASS")
+#         return True
+#     except Exception as e:
+#         print("TCA READ FAIL", e)
+#         return False
 
 def update_io_expander(bus, port0, port1):
     return tca_write(bus, REG_OUTPUT_PORT0, port0) & tca_write(bus, REG_OUTPUT_PORT1, port1)
@@ -227,7 +226,10 @@ with open(CSV_FILE, "a", newline="") as f:
 
     with SMBus(ADS_BUS) as ads_bus, SMBus(TCA_BUS) as tca_bus:
         print("\nSystem Init")
-        tca9539_config(tca_bus)
+        if tca9539_config(tca_bus):
+            print("TCA Initialized")
+        else:
+            print("TCA Failed to Initialize")
         ads7138_init(ads_bus)
         print("\nR1 Measurement")
         enable_r1(tca_bus)
