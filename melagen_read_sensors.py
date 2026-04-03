@@ -69,7 +69,6 @@ P14_FET5_CTL = 1 << 4
 P15_FET5_R1 = 1 << 5
 P16_FET5_R2 = 1 << 6
 
-
 # ==========================================================
 # ADS7138 Low Level Commands
 # ==========================================================
@@ -106,12 +105,9 @@ def ads_read_adc(bus):
     try:
         read = i2c_msg.read(ADS_ADDR, 2)
         bus.i2c_rdwr(read)
-
         data = list(read)
-
         raw = ((data[0] << 8) | data[1]) >> 4
         voltage = raw * VREF / 4095.0
-
         dose = (voltage / A) ** (1.0 / B)
     	# V = A * Dose^B  => Dose = (V/A)^(1/B)
         return raw, voltage, dose
@@ -198,7 +194,6 @@ def ads7138_init(bus):
 
     time.sleep(0.05)
 
-
 # ==========================================================
 # ADC Channel Read + CSV Save
 # ==========================================================
@@ -212,7 +207,7 @@ def read_all_channels(bus, csv_writer, sensor_group):
 		confirm = ads_read_reg(bus, REG_CHANNEL_SEL)
 
 		if confirm != ch:
-			results.append(f"CH{ch-1}:FAIL")
+			results.append(f"Change to CH{ch-1}:FAIL")
 			continue	
 
 		raw, voltage, dose = ads_read_adc(bus)
@@ -270,6 +265,3 @@ with open(CSV_FILE, "a", newline="") as f:
 
 print("\nSequence complete")
 print(f"Data saved to {CSV_FILE}\n")
-
-
-
