@@ -150,12 +150,10 @@ def tca9539_config(bus):
     tca_write(bus, REG_CONFIG_PORT0, 0x00) & \
     tca_write(bus, REG_CONFIG_PORT1, 0x00)
 
-
 def enable_r1(bus):
     print("\nEnabling R1 sensors")
     update_io_expander(bus, R1_PORT0, R1_PORT1)
     time.sleep(0.2)
-
 
 def enable_r2(bus):
     print("\nEnabling R2 sensors")
