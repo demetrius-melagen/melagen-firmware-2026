@@ -189,7 +189,7 @@ def read_all_channels(bus, csv_writer, sensor_group):
 		ads_write_reg(bus, REG_CHANNEL_SEL, ch)
 		confirm = ads_read_reg(bus, REG_CHANNEL_SEL)
 		if confirm != ch:
-			results.append(f"Change to CH{ch-1}:FAIL")
+			results.append(f"CH{ch-1}:FAIL")
 			continue	
 		raw, voltage, dose = ads_read_adc(bus)
 		if raw is None:
@@ -226,11 +226,10 @@ with open(CSV_FILE, "a", newline="") as f:
 
     with SMBus(ADS_BUS) as ads_bus, SMBus(TCA_BUS) as tca_bus:
         print("\nSystem Init")
-        if tca9539_config(tca_bus):
-            print("TCA Initialized")
+        if tca9539_config(tca_bus) & ads7138_init(ads_bus):
+            print("Hardware Initialized")
         else:
-            print("TCA Failed to Initialize")
-        ads7138_init(ads_bus)
+            print("Hardware Failed to Initialize")
         print("\nR1 Measurement")
         enable_r1(tca_bus)
         read_all_channels(ads_bus, writer, "R1")
