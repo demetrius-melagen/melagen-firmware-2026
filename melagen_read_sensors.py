@@ -87,11 +87,8 @@ def ads_read_reg(bus, reg):
     try:
         cmd = i2c_msg.write(ADS_ADDR, [ADS_OPCODE_READ, reg])
         read = i2c_msg.read(ADS_ADDR, 1)
-
         bus.i2c_rdwr(cmd, read)
-
         val = list(read)[0]
-
         print(f"ADS RD 0x{reg:02X}->0x{val:02X} PASS")
         return val
 
@@ -101,7 +98,6 @@ def ads_read_reg(bus, reg):
 
 
 def ads_read_adc(bus):
-
     try:
         read = i2c_msg.read(ADS_ADDR, 2)
         bus.i2c_rdwr(read)
@@ -129,23 +125,27 @@ def tca_write(bus, reg, val):
         print("TCA WRITE FAIL", e)
         return False
 
+def tca_read(bus, reg, val):
+    try:
+        bus.read_byte_data(TCA9539_ADDR, reg, val)
+        print(f"TCA RD 0x{reg:02X}=0x{val:02X} PASS")
+        return True
+    except Exception as e:
+        print("TCA READ FAIL", e)
+        return False
+
 
 def update_io_expander(bus, port0, port1):
-    tca_write(bus, REG_OUTPUT_PORT0, port0)
-    tca_write(bus, REG_OUTPUT_PORT1, port1)
-
+    return tca_write(bus, REG_OUTPUT_PORT0, port0) & tca_write(bus, REG_OUTPUT_PORT1, port1)
 
 def tca9539_config(bus):
 
     print("\nInitializing TCA9539")
 
-    tca_write(bus, REG_OUTPUT_PORT0, 0x00)
-    tca_write(bus, REG_OUTPUT_PORT1, 0x00)
-
-    tca_write(bus, REG_CONFIG_PORT0, 0x00)
+    return tca_write(bus, REG_OUTPUT_PORT0, 0x00) & \
+    tca_write(bus, REG_OUTPUT_PORT1, 0x00) & \
+    tca_write(bus, REG_CONFIG_PORT0, 0x00) & \
     tca_write(bus, REG_CONFIG_PORT1, 0x00)
-
-    print("TCA9539 configured")
 
 
 def enable_r1(bus):
