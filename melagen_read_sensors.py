@@ -151,18 +151,15 @@ def tca9539_config(bus):
     tca_write(bus, REG_CONFIG_PORT1, 0x00)
 
 def enable_r1(bus):
-    print("\nEnabling R1 sensors")
-    update_io_expander(bus, R1_PORT0, R1_PORT1)
+    return update_io_expander(bus, R1_PORT0, R1_PORT1)
 
 
 def enable_r2(bus):
-    print("\nEnabling R2 sensors")
-    update_io_expander(bus, R2_PORT0, R2_PORT1)
+    return update_io_expander(bus, R2_PORT0, R2_PORT1)
     
 
 def disable_all(bus):
-    print("\nDisabling sensors")
-    update_io_expander(bus, 0x00, 0x00)
+    return update_io_expander(bus, 0x00, 0x00)
 
 # ==========================================================
 # ADS7138 INIT
@@ -229,16 +226,21 @@ with open(CSV_FILE, "a", newline="") as f:
         else:
             print("Hardware Failed to Initialize")
         print("\nR1 Measurement")
+        print("\nEnabling R1 sensors")
         enable_r1(tca_bus)
         time.sleep(0.2)
         read_all_channels(ads_bus, writer, "R1")
+        print("\nDisabling sensors")
         disable_all(tca_bus)
         time.sleep(0.5)
         print("\nR2 Measurement")
+        print("\nEnabling R2 sensors")
         enable_r2(tca_bus)
         time.sleep(0.2)
         read_all_channels(ads_bus, writer, "R2")
+        print("\nDisabling sensors")
         disable_all(tca_bus)
+
 
 print("\nSequence complete")
 print(f"Data saved to {CSV_FILE}\n")
