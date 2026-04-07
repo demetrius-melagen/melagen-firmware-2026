@@ -153,12 +153,12 @@ def tca9539_config(bus):
 def enable_r1(bus):
     print("\nEnabling R1 sensors")
     update_io_expander(bus, R1_PORT0, R1_PORT1)
-    time.sleep(0.2)
+
 
 def enable_r2(bus):
     print("\nEnabling R2 sensors")
     update_io_expander(bus, R2_PORT0, R2_PORT1)
-    time.sleep(0.2)
+    
 
 def disable_all(bus):
     print("\nDisabling sensors")
@@ -230,11 +230,13 @@ with open(CSV_FILE, "a", newline="") as f:
             print("Hardware Failed to Initialize")
         print("\nR1 Measurement")
         enable_r1(tca_bus)
+        time.sleep(0.2)
         read_all_channels(ads_bus, writer, "R1")
         disable_all(tca_bus)
         time.sleep(0.5)
         print("\nR2 Measurement")
         enable_r2(tca_bus)
+        time.sleep(0.2)
         read_all_channels(ads_bus, writer, "R2")
         disable_all(tca_bus)
 
