@@ -227,19 +227,31 @@ with open(CSV_FILE, "a", newline="") as f:
             print("Hardware Failed to Initialize")
         print("\nR1 Measurement")
         print("\nEnabling R1 sensors")
-        enable_r1(tca_bus)
+        if enable_r1(tca_bus):
+            print("Successfully Enabled R1 Sensors")
+        else:
+            print("Failed to Enable R1 Sensors")
         time.sleep(0.2)
         read_all_channels(ads_bus, writer, "R1")
         print("\nDisabling sensors")
-        disable_all(tca_bus)
+        if disable_all(tca_bus):
+            print("Successfully Disabled Sensors")
+        else:
+            print("Failed to disable sensors")    
         time.sleep(0.5)
         print("\nR2 Measurement")
         print("\nEnabling R2 sensors")
-        enable_r2(tca_bus)
+        if enable_r2(tca_bus):
+            print("Successfully Enabled R2 Sensors")
+        else:
+            print("Failed to Enable R2 Sensors")
         time.sleep(0.2)
         read_all_channels(ads_bus, writer, "R2")
         print("\nDisabling sensors")
-        disable_all(tca_bus)
+        if disable_all(tca_bus):
+            print("Successfully Disabled Sensors")
+        else:
+            print("Failed to disable sensors")    
 
 
 print("\nSequence complete")
