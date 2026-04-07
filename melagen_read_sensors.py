@@ -166,12 +166,12 @@ def disable_all(bus):
 # ==========================================================
 def ads7138_init(bus):
     print("\nInitializing ADS7138")
-    ads_write_reg(bus, REG_PIN_CFG, 0x00)
-    ads_write_reg(bus, REG_SEQUENCE_CFG, 0x00)
-    ads_write_reg(bus, REG_GENERAL_CFG, 0x00)
-    ads_write_reg(bus, REG_OPMODE_CFG, 0x00)
+    return ads_write_reg(bus, REG_PIN_CFG, 0x00) & \
+    ads_write_reg(bus, REG_SEQUENCE_CFG, 0x00) & \
+    ads_write_reg(bus, REG_GENERAL_CFG, 0x00) & \
+    ads_write_reg(bus, REG_OPMODE_CFG, 0x00) & \
     ads_write_reg(bus, REG_DATA_CFG, 0x10)
-    time.sleep(0.05)
+    
 
 # ==========================================================
 # ADC Channel Read + CSV Save
@@ -225,6 +225,7 @@ with open(CSV_FILE, "a", newline="") as f:
             print("Hardware Initialized")
         else:
             print("Hardware Failed to Initialize")
+        time.sleep(0.05)
         print("\nR1 Measurement")
         print("\nEnabling R1 sensors")
         if enable_r1(tca_bus):
