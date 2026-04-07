@@ -218,7 +218,6 @@ with open(CSV_FILE, "a", newline="") as f:
             "voltage",
             "dose_rad"
         ])
-
     with SMBus(ADS_BUS) as ads_bus, SMBus(TCA_BUS) as tca_bus:
         print("\nSystem Init")
         if tca9539_config(tca_bus) & ads7138_init(ads_bus):
