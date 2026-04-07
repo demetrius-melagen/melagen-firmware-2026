@@ -253,6 +253,5 @@ with open(CSV_FILE, "a", newline="") as f:
         else:
             print("Failed to disable sensors")    
 
-
 print("\nSequence complete")
 print(f"Data saved to {CSV_FILE}\n")
