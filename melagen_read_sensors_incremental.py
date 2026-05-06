@@ -12,7 +12,10 @@ LOG_DIR = "radfet_logs"
 
 # Change this to control file rotation interval
 # 86400 = daily, 3600 = hourly, 60 = minutely, etc.
-LOG_INTERVAL_SECONDS = 3600
+DAY = 86400
+HOUR = 3600
+MINUTE = 60 
+LOG_INTERVAL_SECONDS = HOUR
 
 def get_time_bucket():
     now = datetime.now()
