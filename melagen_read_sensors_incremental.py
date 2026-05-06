@@ -20,15 +20,15 @@ LOG_INTERVAL_SECONDS = HOUR
 def get_time_bucket():
     now = datetime.now()
 
-    if LOG_INTERVAL_SECONDS >= 86400:
+    if LOG_INTERVAL_SECONDS >= DAY:
         # Start of local day
         return now.replace(hour=0, minute=0, second=0, microsecond=0)
 
-    elif LOG_INTERVAL_SECONDS >= 3600:
+    elif LOG_INTERVAL_SECONDS >= HOUR:
         # Start of local hour
         return now.replace(minute=0, second=0, microsecond=0)
 
-    elif LOG_INTERVAL_SECONDS >= 60:
+    elif LOG_INTERVAL_SECONDS >= MINUTE:
         # Start of local minute bucket
         minutes = (now.minute // (LOG_INTERVAL_SECONDS // 60)) * (LOG_INTERVAL_SECONDS // 60)
         return now.replace(minute=minutes, second=0, microsecond=0)
@@ -42,11 +42,11 @@ def get_csv_filename():
     bucket_time = get_time_bucket()
 
     # Adaptive formatting based on interval
-    if LOG_INTERVAL_SECONDS >= 86400:
+    if LOG_INTERVAL_SECONDS >= DAY:
         fmt = "%Y-%m-%d"
-    elif LOG_INTERVAL_SECONDS >= 3600:
+    elif LOG_INTERVAL_SECONDS >= HOUR:
         fmt = "%Y-%m-%d_%H"
-    elif LOG_INTERVAL_SECONDS >= 60:
+    elif LOG_INTERVAL_SECONDS >= MINUTE:
         fmt = "%Y-%m-%d_%H-%M"
     else:
         fmt = "%Y-%m-%d_%H-%M-%S"
