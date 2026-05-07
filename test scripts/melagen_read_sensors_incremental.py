@@ -15,7 +15,7 @@ LOG_DIR = "radfet_logs"
 DAY = 86400
 HOUR = 3600
 MINUTE = 60 
-LOG_INTERVAL_SECONDS = HOUR
+LOG_INTERVAL_SECONDS = DAY
 
 def get_time_bucket():
     now = datetime.now()
