@@ -19,24 +19,21 @@ LOG_INTERVAL_SECONDS = DAY
 
 def get_time_bucket():
     now = datetime.now()
-
     if LOG_INTERVAL_SECONDS >= DAY:
         # Start of local day
         return now.replace(hour=0, minute=0, second=0, microsecond=0)
-
     elif LOG_INTERVAL_SECONDS >= HOUR:
         # Start of local hour
         return now.replace(minute=0, second=0, microsecond=0)
-
     elif LOG_INTERVAL_SECONDS >= MINUTE:
         # Start of local minute bucket
         minutes = (now.minute // (LOG_INTERVAL_SECONDS // 60)) * (LOG_INTERVAL_SECONDS // 60)
         return now.replace(minute=minutes, second=0, microsecond=0)
-
     else:
         # Sub-minute buckets
         seconds = (now.second // LOG_INTERVAL_SECONDS) * LOG_INTERVAL_SECONDS
         return now.replace(second=seconds, microsecond=0)
+    
 def get_csv_filename():
     os.makedirs(LOG_DIR, exist_ok=True)
     bucket_time = get_time_bucket()
