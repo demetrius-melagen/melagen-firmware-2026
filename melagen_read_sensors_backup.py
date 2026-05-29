@@ -30,7 +30,7 @@ MINUTE = 60
 LOG_INTERVAL_SECONDS = DAY
 
 # ==========================================================
-# Dosimeter Calibration Variables
+# Dosimeter Tuning Parameters
 # ==========================================================
 A = 0.02951
 B = 0.45509
