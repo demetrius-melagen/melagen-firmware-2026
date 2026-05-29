@@ -286,6 +286,7 @@ def write_log_row(loggers, row):
 def ads_write_reg(bus, reg, val):
 
     try:
+
         msg = i2c_msg.write(
             ADS_ADDR,
             [ADS_OPCODE_WRITE, reg, val]
@@ -295,12 +296,23 @@ def ads_write_reg(bus, reg, val):
 
         return True
 
-    except:
+    except Exception as e:
+
+        print(
+            f"\n[I2C ERROR] ADS WRITE FAILED | "
+            f"ADDR=0x{ADS_ADDR:02X} "
+            f"REG=0x{reg:02X} "
+            f"VAL=0x{val:02X}"
+        )
+
+        print(f"Exception: {type(e).__name__}: {e}")
+
         return False
 
 def ads_read_reg(bus, reg):
 
     try:
+
         cmd = i2c_msg.write(
             ADS_ADDR,
             [ADS_OPCODE_READ, reg]
@@ -312,12 +324,22 @@ def ads_read_reg(bus, reg):
 
         return list(read)[0]
 
-    except:
+    except Exception as e:
+
+        print(
+            f"\n[I2C ERROR] ADS READ FAILED | "
+            f"ADDR=0x{ADS_ADDR:02X} "
+            f"REG=0x{reg:02X}"
+        )
+
+        print(f"Exception: {type(e).__name__}: {e}")
+
         return None
 
 def ads_read_adc(bus):
 
     try:
+
         read = i2c_msg.read(ADS_ADDR, 2)
 
         bus.i2c_rdwr(read)
@@ -332,7 +354,15 @@ def ads_read_adc(bus):
 
         return raw, voltage, dose
 
-    except:
+    except Exception as e:
+
+        print(
+            f"\n[I2C ERROR] ADS ADC READ FAILED | "
+            f"ADDR=0x{ADS_ADDR:02X}"
+        )
+
+        print(f"Exception: {type(e).__name__}: {e}")
+
         return None, None, None
 
 # ==========================================================
@@ -341,6 +371,7 @@ def ads_read_adc(bus):
 def tca_write(bus, reg, val):
 
     try:
+
         bus.write_byte_data(
             TCA9539_ADDR,
             reg,
@@ -349,26 +380,54 @@ def tca_write(bus, reg, val):
 
         return True
 
-    except:
+    except Exception as e:
+
+        print(
+            f"\n[I2C ERROR] TCA WRITE FAILED | "
+            f"ADDR=0x{TCA9539_ADDR:02X} "
+            f"REG=0x{reg:02X} "
+            f"VAL=0x{val:02X}"
+        )
+
+        print(f"Exception: {type(e).__name__}: {e}")
+
         return False
 
 def update_io_expander(bus, p0, p1):
 
-    return (
-        tca_write(bus, REG_OUTPUT_PORT0, p0) &
-        tca_write(bus, REG_OUTPUT_PORT1, p1)
-    )
+    success0 = tca_write(bus, REG_OUTPUT_PORT0, p0)
+    success1 = tca_write(bus, REG_OUTPUT_PORT1, p1)
+
+    if not (success0 and success1):
+
+        print(
+            "\n[ERROR] Failed to update IO expander "
+            f"(P0=0x{p0:02X}, P1=0x{p1:02X})"
+        )
+
+    return success0 and success1
 
 def tca9539_config(bus):
 
-    return (
-        tca_write(bus, REG_OUTPUT_PORT0, 0x00) &
-        tca_write(bus, REG_OUTPUT_PORT1, 0x00) &
-        tca_write(bus, REG_CONFIG_PORT0, 0x00) &
+    print("\nConfiguring TCA9539 IO expander...")
+
+    success = (
+        tca_write(bus, REG_OUTPUT_PORT0, 0x00) and
+        tca_write(bus, REG_OUTPUT_PORT1, 0x00) and
+        tca_write(bus, REG_CONFIG_PORT0, 0x00) and
         tca_write(bus, REG_CONFIG_PORT1, 0x00)
     )
 
+    if success:
+        print("TCA9539 configuration successful")
+    else:
+        print("TCA9539 configuration FAILED")
+
+    return success
+
 def enable_r1(bus):
+
+    print("\nEnabling R1 sensor bank...")
 
     return update_io_expander(
         bus,
@@ -378,6 +437,8 @@ def enable_r1(bus):
 
 def enable_r2(bus):
 
+    print("\nEnabling R2 sensor bank...")
+
     return update_io_expander(
         bus,
         R2_PORT0,
@@ -385,6 +446,8 @@ def enable_r2(bus):
     )
 
 def disable_all(bus):
+
+    print("\nDisabling all sensors...")
 
     return update_io_expander(
         bus,
@@ -397,17 +460,43 @@ def disable_all(bus):
 # ==========================================================
 def read_all_channels(bus, loggers, group):
 
+    print(f"\nReading sensor group: {group}")
+
     for ch in range(2, 7):
 
-        ads_write_reg(bus, REG_CHANNEL_SEL, ch)
+        print(f"\nSelecting ADS channel {ch}")
 
-        if ads_read_reg(bus, REG_CHANNEL_SEL) != ch:
+        if not ads_write_reg(bus, REG_CHANNEL_SEL, ch):
+
+            print(f"[ERROR] Failed to select channel {ch}")
+
+            continue
+
+        verify = ads_read_reg(bus, REG_CHANNEL_SEL)
+
+        if verify != ch:
+
+            print(
+                f"[VERIFY ERROR] "
+                f"Wrote CH{ch} but read back {verify}"
+            )
+
             continue
 
         raw, voltage, dose = ads_read_adc(bus)
 
         if raw is None:
+
+            print(f"[ERROR] ADC read failed on CH{ch}")
+
             continue
+
+        print(
+            f"CH{ch - 1} | "
+            f"RAW={raw} | "
+            f"V={voltage:.6f} V | "
+            f"DOSE={dose:.6f} rad"
+        )
 
         row = [
             datetime.now().isoformat(),
@@ -425,50 +514,88 @@ def read_all_channels(bus, loggers, group):
 # ==========================================================
 # Main
 # ==========================================================
+print("\n========================================")
+print("RADFET DOSIMETER LOGGER STARTING")
+print("========================================")
+
 loggers = initialize_loggers()
 
-with SMBus(ADS_BUS) as ads_bus, SMBus(TCA_BUS) as tca_bus:
+try:
 
-    tca9539_config(tca_bus)
+    with SMBus(ADS_BUS) as ads_bus, SMBus(TCA_BUS) as tca_bus:
 
-    time.sleep(0.05)
+        print("\nOpened I2C buses successfully")
 
-    # ---------------- R1 ----------------
-    enable_r1(tca_bus)
+        if not tca9539_config(tca_bus):
 
-    time.sleep(0.2)
+            print("\n[FATAL ERROR] Failed to configure TCA9539")
+            exit(1)
 
-    read_all_channels(
-        ads_bus,
-        loggers,
-        "R1"
-    )
+        time.sleep(0.05)
 
-    disable_all(tca_bus)
+        # ---------------- R1 ----------------
+        if enable_r1(tca_bus):
 
-    time.sleep(0.5)
+            time.sleep(0.2)
 
-    # ---------------- R2 ----------------
-    enable_r2(tca_bus)
+            read_all_channels(
+                ads_bus,
+                loggers,
+                "R1"
+            )
 
-    time.sleep(0.2)
+        disable_all(tca_bus)
 
-    read_all_channels(
-        ads_bus,
-        loggers,
-        "R2"
-    )
+        time.sleep(0.5)
 
-    disable_all(tca_bus)
+        # ---------------- R2 ----------------
+        if enable_r2(tca_bus):
+
+            time.sleep(0.2)
+
+            read_all_channels(
+                ads_bus,
+                loggers,
+                "R2"
+            )
+
+        disable_all(tca_bus)
+
+except Exception as e:
+
+    print("\n[FATAL ERROR]")
+    print(f"{type(e).__name__}: {e}")
 
 # ==========================================================
 # Cleanup
 # ==========================================================
+print("\nCleaning up log files...")
+
 for logger in loggers.values():
 
     if logger["file"]:
+
         logger["file"].close()
 
-print("\nDone. Logs stored in:")
-print(f"  Primary: {os.path.abspath(PRIMARY_LOG_DIR)}")
-print(f"  Backup : {os.path.abspath(BACKUP_LOG_DIR)}\n")
+        print(
+            f"Closed: "
+            f"{os.path.abspath(logger['name'])}"
+        )
+
+print("\n========================================")
+print("DONE")
+print("========================================")
+
+print("\nLogs stored in:")
+
+print(
+    f"  Primary: "
+    f"{os.path.abspath(PRIMARY_LOG_DIR)}"
+)
+
+print(
+    f"  Backup : "
+    f"{os.path.abspath(BACKUP_LOG_DIR)}"
+)
+
+print("")
