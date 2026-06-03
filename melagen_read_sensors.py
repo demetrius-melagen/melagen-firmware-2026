@@ -335,34 +335,22 @@ def ads_read_reg(bus, reg):
         print(f"Exception: {type(e).__name__}: {e}")
 
         return None
-
-def ads_read_adc(bus):
-
+baseline_voltage = 1.7 #use constant for testing, update code to assign unique base for each sensor
+def ads_read_adc(bus): #, baseline_voltage):
     try:
-
         read = i2c_msg.read(ADS_ADDR, 2)
-
         bus.i2c_rdwr(read)
-
         data = list(read)
-
         raw = ((data[0] << 8) | data[1]) >> 4
-
         voltage = raw * VREF / 4095.0
-
-        dose = (voltage / A) ** (1.0 / B)
-
-        return raw, voltage, dose
-
+        delta_v = voltage - baseline_voltage
+        if delta_v <= 0:
+            dose = 0
+        else:
+            dose = (delta_v / A) ** (1.0 / B)
+        return raw, delta_v, dose
     except Exception as e:
-
-        print(
-            f"\n[I2C ERROR] ADS ADC READ FAILED | "
-            f"ADDR=0x{ADS_ADDR:02X}"
-        )
-
-        print(f"Exception: {type(e).__name__}: {e}")
-
+        print("ADC read error:", e)
         return None, None, None
 
 # ==========================================================
