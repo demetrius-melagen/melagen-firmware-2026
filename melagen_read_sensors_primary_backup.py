@@ -37,7 +37,7 @@ B = 0.45509
 # I2C Bus Definitions
 # ==========================================================
 ADS_BUS = 1
-TCA_BUS = 1
+TCA_BUS = 7
 
 # ==========================================================
 # Device Addresses
@@ -176,7 +176,21 @@ def get_time_bucket():
 # ==========================================================
 def build_filename(base_dir):
 
-    os.makedirs(base_dir, exist_ok=True)
+    try:
+
+        os.makedirs(base_dir, exist_ok=True)
+
+    except Exception as e:
+
+        print(
+            f"\n[LOG ERROR] Cannot access directory: {base_dir}"
+        )
+
+        print(
+            f"{type(e).__name__}: {e}"
+        )
+
+        return None
 
     bucket_time = get_time_bucket()
 
@@ -295,35 +309,108 @@ def safe_write_logger(logger, row, logger_name):
 
 def update_log_files(loggers):
 
-    primary_filename = build_filename(PRIMARY_LOG_DIR)
-    backup_filename  = build_filename(BACKUP_LOG_DIR)
+    # --------------------------------------------------
+    # Primary location
+    # --------------------------------------------------
+    try:
 
+        primary_filename = build_filename(
+            PRIMARY_LOG_DIR
+        )
+
+    except Exception as e:
+
+        print(
+            f"\n[LOG ERROR] Primary log unavailable"
+        )
+
+        print(
+            f"{type(e).__name__}: {e}"
+        )
+
+        primary_filename = None
+
+    # --------------------------------------------------
+    # Backup location
+    # --------------------------------------------------
+    try:
+
+        backup_filename = build_filename(
+            BACKUP_LOG_DIR
+        )
+
+    except Exception as e:
+
+        print(
+            f"\n[LOG ERROR] Backup log unavailable"
+        )
+
+        print(
+            f"{type(e).__name__}: {e}"
+        )
+
+        backup_filename = None
+
+    # --------------------------------------------------
+    # Open / rotate primary file
+    # --------------------------------------------------
     if (
-        loggers["primary"]["name"] != primary_filename or
-        loggers["primary"]["file"] is None
+        primary_filename is not None and
+        (
+            loggers["primary"]["name"] != primary_filename or
+            loggers["primary"]["file"] is None
+        )
     ):
 
         try:
+
             if loggers["primary"]["file"]:
+
                 loggers["primary"]["file"].close()
+
         except:
             pass
 
-        loggers["primary"] = try_open_log_file(primary_filename)
+        loggers["primary"] = try_open_log_file(
+            primary_filename
+        )
 
+    # --------------------------------------------------
+    # Open / rotate backup file
+    # --------------------------------------------------
     if (
-        loggers["backup"]["name"] != backup_filename or
-        loggers["backup"]["file"] is None
+        backup_filename is not None and
+        (
+            loggers["backup"]["name"] != backup_filename or
+            loggers["backup"]["file"] is None
+        )
     ):
 
         try:
+
             if loggers["backup"]["file"]:
+
                 loggers["backup"]["file"].close()
+
         except:
             pass
 
-        loggers["backup"] = try_open_log_file(backup_filename)
+        loggers["backup"] = try_open_log_file(
+            backup_filename
+        )
 
+    # --------------------------------------------------
+    # Mark unavailable destinations offline
+    # --------------------------------------------------
+    if primary_filename is None:
+
+        loggers["primary"]["file"] = None
+        loggers["primary"]["writer"] = None
+
+    if backup_filename is None:
+
+        loggers["backup"]["file"] = None
+        loggers["backup"]["writer"] = None
 def write_log_row(loggers, row):
 
     update_log_files(loggers)
@@ -420,7 +507,6 @@ def ads_read_adc(bus): #, baseline_voltage):
     except Exception as e:
         print("ADC read error:", e)
         return None, None, None
-
 
 # ==========================================================
 # TCA Control
