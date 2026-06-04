@@ -13,9 +13,13 @@ PRIMARY_LOG_DIR = "radfet_logs"
 
 # Example backup locations:
 # Linux external drive:
-# BACKUP_LOG_DIR = "/media/usr/####-####"
+# BACKUP_LOG_DIR = "/media/pi/USB_DRIVE/radfet_backup"
 
-BACKUP_LOG_DIR = "backup_logs"
+# Windows:
+# BACKUP_LOG_DIR = "D:/radfet_backup"
+
+# Raspberry Pi / Linux example:
+BACKUP_LOG_DIR = "Downloads"
 
 # Rotation intervals
 DAY = 86400
@@ -35,7 +39,7 @@ B = 0.45509
 # I2C Bus Definitions
 # ==========================================================
 ADS_BUS = 1
-TCA_BUS = 7
+TCA_BUS = 1
 
 # ==========================================================
 # Device Addresses
@@ -174,21 +178,7 @@ def get_time_bucket():
 # ==========================================================
 def build_filename(base_dir):
 
-    try:
-
-        os.makedirs(base_dir, exist_ok=True)
-
-    except Exception as e:
-
-        print(
-            f"\n[LOG ERROR] Cannot access directory: {base_dir}"
-        )
-
-        print(
-            f"{type(e).__name__}: {e}"
-        )
-
-        return None
+    os.makedirs(base_dir, exist_ok=True)
 
     bucket_time = get_time_bucket()
 
@@ -251,186 +241,44 @@ def initialize_loggers():
         }
     }
 
-def try_open_log_file(filename):
-
-    try:
-
-        return open_log_file(filename)
-
-    except Exception as e:
-
-        print(
-            f"\n[LOG ERROR] Cannot open {filename}"
-        )
-
-        print(
-            f"{type(e).__name__}: {e}"
-        )
-
-        return {
-            "file": None,
-            "writer": None,
-            "name": filename
-        }
-
-def safe_write_logger(logger, row, logger_name):
-
-    try:
-
-        if (
-            logger["file"] is None or
-            logger["writer"] is None
-        ):
-            return False
-
-        logger["writer"].writerow(row)
-        logger["file"].flush()
-
-        return True
-
-    except Exception as e:
-
-        print(
-            f"\n[LOG ERROR] {logger_name} write failed: "
-            f"{type(e).__name__}: {e}"
-        )
-
-        try:
-            logger["file"].close()
-        except:
-            pass
-
-        logger["file"] = None
-        logger["writer"] = None
-
-        return False
-
 def update_log_files(loggers):
 
-    # --------------------------------------------------
-    # Primary location
-    # --------------------------------------------------
-    try:
+    primary_filename = build_filename(PRIMARY_LOG_DIR)
+    backup_filename  = build_filename(BACKUP_LOG_DIR)
 
-        primary_filename = build_filename(
-            PRIMARY_LOG_DIR
-        )
+    # ---------------- PRIMARY ----------------
+    if loggers["primary"]["name"] != primary_filename:
 
-    except Exception as e:
+        if loggers["primary"]["file"]:
+            loggers["primary"]["file"].close()
 
-        print(
-            f"\n[LOG ERROR] Primary log unavailable"
-        )
+        loggers["primary"] = open_log_file(primary_filename)
 
-        print(
-            f"{type(e).__name__}: {e}"
-        )
+        print("\nPrimary log file:")
+        print(os.path.abspath(primary_filename))
 
-        primary_filename = None
+    # ---------------- BACKUP ----------------
+    if loggers["backup"]["name"] != backup_filename:
 
-    # --------------------------------------------------
-    # Backup location
-    # --------------------------------------------------
-    try:
+        if loggers["backup"]["file"]:
+            loggers["backup"]["file"].close()
 
-        backup_filename = build_filename(
-            BACKUP_LOG_DIR
-        )
+        loggers["backup"] = open_log_file(backup_filename)
 
-    except Exception as e:
+        print("\nBackup log file:")
+        print(os.path.abspath(backup_filename))
 
-        print(
-            f"\n[LOG ERROR] Backup log unavailable"
-        )
-
-        print(
-            f"{type(e).__name__}: {e}"
-        )
-
-        backup_filename = None
-
-    # --------------------------------------------------
-    # Open / rotate primary file
-    # --------------------------------------------------
-    if (
-        primary_filename is not None and
-        (
-            loggers["primary"]["name"] != primary_filename or
-            loggers["primary"]["file"] is None
-        )
-    ):
-
-        try:
-
-            if loggers["primary"]["file"]:
-
-                loggers["primary"]["file"].close()
-
-        except:
-            pass
-
-        loggers["primary"] = try_open_log_file(
-            primary_filename
-        )
-
-    # --------------------------------------------------
-    # Open / rotate backup file
-    # --------------------------------------------------
-    if (
-        backup_filename is not None and
-        (
-            loggers["backup"]["name"] != backup_filename or
-            loggers["backup"]["file"] is None
-        )
-    ):
-
-        try:
-
-            if loggers["backup"]["file"]:
-
-                loggers["backup"]["file"].close()
-
-        except:
-            pass
-
-        loggers["backup"] = try_open_log_file(
-            backup_filename
-        )
-
-    # --------------------------------------------------
-    # Mark unavailable destinations offline
-    # --------------------------------------------------
-    if primary_filename is None:
-
-        loggers["primary"]["file"] = None
-        loggers["primary"]["writer"] = None
-
-    if backup_filename is None:
-
-        loggers["backup"]["file"] = None
-        loggers["backup"]["writer"] = None
 def write_log_row(loggers, row):
 
     update_log_files(loggers)
 
-    primary_ok = safe_write_logger(
-        loggers["primary"],
-        row,
-        "PRIMARY"
-    )
+    # Write to primary
+    loggers["primary"]["writer"].writerow(row)
+    loggers["primary"]["file"].flush()
 
-    backup_ok = safe_write_logger(
-        loggers["backup"],
-        row,
-        "BACKUP"
-    )
-
-    if not primary_ok and not backup_ok:
-
-        print(
-            "\n[CRITICAL] Unable to write "
-            "to primary or backup logging destination"
-        )
+    # Write to backup
+    loggers["backup"]["writer"].writerow(row)
+    loggers["backup"]["file"].flush()
 
 # ==========================================================
 # ADS Functions
@@ -487,7 +335,6 @@ def ads_read_reg(bus, reg):
         print(f"Exception: {type(e).__name__}: {e}")
 
         return None
-
 baseline_voltage = 1.7 #use constant for testing, update code to assign unique base for each sensor
 def ads_read_adc(bus): #, baseline_voltage):
     try:
