@@ -31,6 +31,9 @@ LOG_INTERVAL_SECONDS = DAY
 A = 0.02951
 B = 0.45509
 
+# Dosimeter Unique Baseline Voltages
+REF_V = [1.7,1.7,1.7,1.7,1.7]
+
 # ==========================================================
 # I2C Bus Definitions
 # ==========================================================
@@ -488,8 +491,8 @@ def ads_read_reg(bus, reg):
 
         return None
 
-baseline_voltage = 1.7 #use constant for testing, update code to assign unique base for each sensor
-def ads_read_adc(bus): #, baseline_voltage):
+# baseline_voltage = 1.7 #use constant for testing, update code to assign unique base for each sensor
+def ads_read_adc(bus, baseline_voltage):
     try:
         read = i2c_msg.read(ADS_ADDR, 2)
         bus.i2c_rdwr(read)
@@ -624,7 +627,7 @@ def read_all_channels(bus, loggers, group):
 
             continue
 
-        raw, voltage, dose = ads_read_adc(bus)
+        raw, voltage, dose = ads_read_adc(bus,REF_V[ch-2])
 
         if raw is None:
 
