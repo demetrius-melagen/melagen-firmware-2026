@@ -32,7 +32,7 @@ A = 0.02951
 B = 0.45509
 
 # Dosimeter Unique Baseline Voltages
-REF_V = [1.7,1.7,1.7,1.7,1.7]
+REF_V = [[1.71,1.73],[1.71,1.73],[1.71,1.73],[1.71,1.73],[1.71,1.73]] 
 
 # ==========================================================
 # I2C Bus Definitions
@@ -627,7 +627,7 @@ def read_all_channels(bus, loggers, group):
 
             continue
 
-        raw, voltage, dose = ads_read_adc(bus,REF_V[ch-2])
+        raw, voltage, dose = ads_read_adc(bus,REF_V[ch-2][0 if group == "R1" else 1])
 
         if raw is None:
 
