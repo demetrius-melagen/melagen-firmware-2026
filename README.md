@@ -4,7 +4,7 @@ Firmware-style Python software for controlling a sensor data collection loop usi
 
 The application selects two VT01 sensor banks (`R1` and `R2`) through the TCA9539, samples five ADC inputs from each bank through the ADS7138, and writes every valid measurement to redundant daily CSV logs. Hardware and logging failures are captured separately in an error log so that acquisition problems can be diagnosed without stopping the entire channel scan.
 
-> **Note:** Although this project performs a firmware-like hardware-control role, the supplied implementation is a Python 3 program intended to run under Linux on a host with accessible I²C buses, such as a Raspberry Pi or another single-board computer.
+> **Note:** Although this project performs a firmware-like hardware-control role, the supplied implementation is a Python 3 program intended to run under Linux on a host with accessible I2C buses, such as a Raspberry Pi or another single-board computer.
 
 ## Features
 
@@ -22,9 +22,9 @@ The application selects two VT01 sensor banks (`R1` and `R2`) through the TCA953
 
 ## Hardware Overview
 
-The application communicates with two I²C devices on separate Linux I²C buses:
+The application communicates with two I2C devices on separate Linux I2C buses:
 
-| Device | Purpose | I²C bus | Address |
+| Device | Purpose | I2C bus | Address |
 |---|---|---:|---:|
 | ADS7138 | Selects and digitizes dosimeter analog signals | `1` | `0x10` |
 | TCA9539 | Controls the R1/R2 routing and enable lines | `7` | `0x74` |
@@ -84,20 +84,20 @@ raw_adc = ((byte_0 << 8) | byte_1) >> 4
 voltage = raw_adc * VREF / 4095
 ```
 
-ADS7138 hardware channels 2–6 are written to the output CSV as logical channels 1–5. This one-position offset is intentional in the supplied software.
+ADS7138 hardware channels 2-6 are written to the output CSV as logical channels 1-5. This one-position offset is intentional in the supplied software.
 
 ## Acquisition Sequence
 
 One invocation performs a single complete acquisition cycle:
 
 1. Initialize the primary and backup logger state.
-2. Open Linux I²C bus 1 for the ADS7138 and bus 7 for the TCA9539.
+2. Open Linux I2C bus 1 for the ADS7138 and bus 7 for the TCA9539.
 3. Initialize both TCA9539 output registers to zero.
 4. Configure both TCA9539 ports as outputs.
 5. Wait 50 ms.
 6. Enable the R1 sensor bank.
 7. Wait 200 ms for the selected bank to settle.
-8. Select, verify, read, and log ADS7138 hardware channels 2–6.
+8. Select, verify, read, and log ADS7138 hardware channels 2-6.
 9. Wait 10 ms after each successful channel sample.
 10. Disable all sensors and wait 500 ms before switching banks.
 11. Enable the R2 sensor bank and wait 200 ms.
@@ -111,7 +111,7 @@ This program does **not** contain an infinite loop. Continuous or periodic colle
 
 ### Software
 
-- Linux with I²C device support enabled
+- Linux with I2C device support enabled
 - Python 3
 - `smbus2`
 - Permission to access `/dev/i2c-1` and `/dev/i2c-7`
@@ -122,7 +122,7 @@ Install the Python dependency:
 python3 -m pip install smbus2
 ```
 
-On Debian- or Raspberry Pi OS-based systems, the I²C utilities are also useful for diagnostics:
+On Debian- or Raspberry Pi OS-based systems, the I2C utilities are also useful for diagnostics:
 
 ```bash
 sudo apt update
@@ -185,7 +185,7 @@ chmod +x radfet_logger.py
 ./radfet_logger.py
 ```
 
-A successful run prints the configuration, selected bank, logical channel, raw ADC code, converted voltage, and final log paths. The process returns exit status `0` after its normal top-level flow, including cases where an I²C exception was caught and recorded. Operational monitoring should therefore inspect the error CSV as well as the process exit status.
+A successful run prints the configuration, selected bank, logical channel, raw ADC code, converted voltage, and final log paths. The process returns exit status `0` after its normal top-level flow, including cases where an I2C exception was caught and recorded. Operational monitoring should therefore inspect the error CSV as well as the process exit status.
 
 ## Output Files
 
@@ -240,7 +240,7 @@ Common error codes include:
 
 | Error code | Meaning |
 |---|---|
-| `MAIN_I2C_ERROR` | An I²C bus could not be opened or the top-level bus operation failed |
+| `MAIN_I2C_ERROR` | An I2C bus could not be opened or the top-level bus operation failed |
 | `TCA_CONFIG_ERROR` | One or more TCA9539 initialization writes failed |
 | `TCA_CONFIG_FATAL` | Acquisition was skipped because TCA9539 setup was unsuccessful |
 | `TCA_WRITE_ERROR` | A TCA9539 register write failed |
@@ -255,18 +255,147 @@ Common error codes include:
 | `LOG_WRITE_ERROR` | A row could not be written to one log destination |
 | `ALL_LOGS_UNAVAILABLE` | Neither primary nor backup accepted a measurement row |
 
-## Running Periodically
+## Running Periodically with systemd
 
-Because each execution performs one R1/R2 scan, a systemd timer or cron job can supply the collection interval. Ensure that scheduled runs cannot overlap, because the application does not implement inter-process locking and simultaneous processes would also manipulate the same sensor-selection outputs.
+Each program invocation performs one complete R1/R2 scan and then exits. The supplied `dosimeter_read.service` defines how the acquisition program runs, while `dosimeter_read.timer` determines when systemd launches it.
 
-Example cron entry for one acquisition every minute:
+> **Important:** Before installation, review the service file and verify that `ExecStart`, `WorkingDirectory`, `User`, and `Group` match the actual script location and account on the target system. The service account must have permission to access `/dev/i2c-1`, `/dev/i2c-7`, and both logging directories.
+
+### Install the service and timer
+
+1. From the directory containing the unit files, copy both files into the systemd system-unit directory:
+
+   ```bash
+   sudo cp dosimeter_read.service dosimeter_read.timer /etc/systemd/system/
+   ```
+
+2. Reload the systemd manager so it recognizes the new or updated unit files:
+
+   ```bash
+   sudo systemctl daemon-reload
+   ```
+
+3. Enable the timer so it starts automatically when the device boots:
+
+   ```bash
+   sudo systemctl enable dosimeter_read.timer
+   ```
+
+4. Start the timer immediately:
+
+   ```bash
+   sudo systemctl start dosimeter_read.timer
+   ```
+
+   Steps 3 and 4 can also be combined:
+
+   ```bash
+   sudo systemctl enable --now dosimeter_read.timer
+   ```
+
+### Verify scheduled operation
+
+Check the timer first to confirm that it is active and to see its previous and next trigger times:
+
+```bash
+sudo systemctl status dosimeter_read.timer
+systemctl list-timers dosimeter_read.timer
+```
+
+A healthy timer normally reports `active (waiting)`. The status output may show a green indicator in terminals that support color.
+
+After the timer has triggered, check the acquisition service:
+
+```bash
+sudo systemctl status dosimeter_read.service
+```
+
+Because this is expected to be a one-shot acquisition service, it may display `inactive (dead)` after a successful run. This is normal when the process has completed. Confirm that the most recent execution reports `status=0/SUCCESS`.
+
+View recent service messages when investigating a failure:
+
+```bash
+sudo journalctl -u dosimeter_read.service -n 50 --no-pager
+```
+
+Follow messages live during testing:
+
+```bash
+sudo journalctl -u dosimeter_read.service -f
+```
+
+The process can return status `0` after certain caught I2C errors, so also inspect `melagen_error_log.csv` and verify that expected measurement rows appear in the primary or backup daily CSV.
+
+### Test the service manually
+
+To run one acquisition immediately without waiting for the timer:
+
+```bash
+sudo systemctl start dosimeter_read.service
+sudo systemctl status dosimeter_read.service
+```
+
+### Stop scheduled acquisition
+
+Stop the active timer to prevent additional triggers during the current boot session:
+
+```bash
+sudo systemctl stop dosimeter_read.timer
+```
+
+Stopping does not remove the timer's boot-time enablement. If it remains enabled, it will start again after the next reboot.
+
+### Disable scheduled acquisition
+
+Disable the timer to prevent it from starting automatically at boot:
+
+```bash
+sudo systemctl disable dosimeter_read.timer
+```
+
+Stop and disable it in one command when both behaviors are wanted:
+
+```bash
+sudo systemctl disable --now dosimeter_read.timer
+```
+
+Disabling the timer does not delete the service files or measurement logs. To restore scheduled acquisition later, run:
+
+```bash
+sudo systemctl enable --now dosimeter_read.timer
+```
+
+### Update or remove the unit files
+
+After editing either unit file, copy the updated files to `/etc/systemd/system/`, reload systemd, and restart the timer:
+
+```bash
+sudo cp dosimeter_read.service dosimeter_read.timer /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl restart dosimeter_read.timer
+```
+
+If the units are no longer needed, stop and disable the timer before removing the installed files, and then reload systemd:
+
+```bash
+sudo systemctl disable --now dosimeter_read.timer
+sudo rm /etc/systemd/system/dosimeter_read.service /etc/systemd/system/dosimeter_read.timer
+sudo systemctl daemon-reload
+```
+
+### Scheduling safety
+
+Set the timer interval longer than the worst-case acquisition duration. The application does not implement inter-process locking, and overlapping instances could manipulate the same TCA9539 outputs and write to the same CSV files. systemd normally does not start a second copy while the same service unit is active, but manual execution or a differently named unit can still cause concurrent access.
+
+### Optional cron alternative
+
+If systemd is unavailable, the following cron entry runs one acquisition every minute:
 
 ```cron
 * * * * * cd /opt/vt01-logger && /usr/bin/python3 radfet_logger.py >> acquisition_console.log 2>&1
 ```
 
-For production use, a systemd service/timer is generally preferable because it provides controlled working directories, permissions, restart policy, and centralized console logs.
-
+For production deployments, systemd is generally preferable because it provides an explicit working directory, permissions, boot-time activation, status reporting, and centralized console logs.
 ## Failure Behavior and Safety
 
 - A failed ADC channel selection, verification, or conversion is logged and that channel is skipped.
@@ -279,11 +408,11 @@ For production use, a systemd service/timer is generally preferable because it p
 
 ## Troubleshooting
 
-### I²C bus cannot be opened
+### I2C bus cannot be opened
 
 - Confirm `/dev/i2c-1` and `/dev/i2c-7` exist.
-- Enable I²C in the platform configuration.
-- Check that the running account belongs to the appropriate I²C-access group, or test with suitable privileges.
+- Enable I2C in the platform configuration.
+- Check that the running account belongs to the appropriate I2C-access group, or test with suitable privileges.
 - Confirm that bus 7 is not a mistaken board-specific bus number.
 
 ### Device is missing from `i2cdetect`
@@ -296,7 +425,7 @@ For production use, a systemd service/timer is generally preferable because it p
 ### `CHANNEL_VERIFY_ERROR`
 
 - Confirm the ADS7138 command opcodes and register address against the exact device revision and operating mode.
-- Check for I²C signal integrity problems.
+- Check for I2C signal integrity problems.
 - Ensure no other process is changing the ADC configuration concurrently.
 
 ### Voltages are consistently incorrect
@@ -319,7 +448,7 @@ Review `melagen_error_log.csv`. The implementation intentionally skips a channel
 For each ADC sample:
 
 ```text
-voltage = raw_adc × 5.0 / 4095
+voltage = raw_adc x 5.0 / 4095
 ```
 
 Therefore:
