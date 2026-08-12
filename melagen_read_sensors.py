@@ -23,7 +23,6 @@ ERROR_LOG_FILE = os.path.join(SCRIPT_DIR, "melagen_error_log.csv")
 ADS_BUS = 1
 TCA_BUS = 7
 
-
 # ==========================================================
 # Device Addresses
 # ==========================================================
