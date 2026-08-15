@@ -63,7 +63,7 @@ def csv_to_aegis_encoding(csv):
         # do something with the chunk
         encoding = encoder(chunk)
         encoded_messages.append(encoding)
-        print(encoding)
+        # print(encoding)
     return encoded_messages
 
 
@@ -86,21 +86,23 @@ ser = serial.Serial(
 # print(ser.name)
 # print(ser.baudrate)
 try:
-    #some code that may throw an exception
     # message = 'GETINFO'
     # message = message.encode('ascii')
     messages = csv_to_aegis_encoding('flower_bot_training_sunroom_7am_wet.csv')
     for message in messages:
         ser.write(message)
+        data = ser.read(0xfff1)
+        print(f"read bytes in buffer:{data}")
         time.sleep(1)
     # #time.sleep(1)
 
     # read = ser.read(100)
     # print(read)
+    # if ser.in_waiting > 0:
+    #     available = ser.read(ser.in_waiting)
     ser.close()
 
 except Exception as e:
-    #exception handling code
     print(f"{e}")
 
 
