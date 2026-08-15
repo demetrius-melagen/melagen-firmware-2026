@@ -6,7 +6,7 @@ import time
 from typing import Union
 
 #aegis encoding function
-def aegis_encode(data: Union[bytes, str, None] = None, deviceID: int = 0, messageID:
+def encoder(data: Union[bytes, str, None] = None, deviceID: int = 0, messageID:
 int = 0) -> bytes:
     '''
     Encode a Message. If 'data' is of type str, it will be converted to a byte string
@@ -57,15 +57,17 @@ def csv_to_aegis_encoding(csv):
 
     # replacing ',' by space
     # text = text.replace(",", " ")  
+    encoded_messages = []
 
     for chunk in chunks(text, 0xfff1):
         # do something with the chunk
-        encoding = aegis_encode(chunk)
+        encoding = encoder(chunk)
+        encoded_messages.append(encoding)
         print(encoding)
-    return encoding
+    return encoded_messages
 
 
-message = csv_to_aegis_encoding('flower_bot_training_sunroom_7am_wet.csv')
+
 # Source - https://stackoverflow.com/q/78199772
 # Posted by Ondřej Hojný, modified by community. See post 'Timeline' for change history
 # Retrieved 2026-08-15, License - CC BY-SA 4.0
@@ -87,11 +89,14 @@ try:
     #some code that may throw an exception
     # message = 'GETINFO'
     # message = message.encode('ascii')
-    ser.write(message)
+    messages = csv_to_aegis_encoding('flower_bot_training_sunroom_7am_wet.csv')
+    for message in messages:
+        ser.write(message)
+        time.sleep(1)
     # #time.sleep(1)
 
-    read = ser.read(100)
-    print(read)
+    # read = ser.read(100)
+    # print(read)
     ser.close()
 
 except Exception as e:
