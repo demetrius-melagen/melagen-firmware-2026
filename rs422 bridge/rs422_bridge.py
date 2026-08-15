@@ -24,7 +24,9 @@ int = 0) -> bytes:
             if length > 0xfff1:
                 raise ValueError(f'Data packet size of {length:#6x} bytes exceeds limit of 0xfff1 bytes')
     # Bytes 1 - 2: Start of Message flag
-    msg = bytearray(b'\xa5\x3d')
+    msg = bytearray(b'\xa5\x3D')
+    print(msg)
+
     # Bytes 3 - 4: Length of Message
     msg.extend(length.to_bytes(2, 'big'))
     # Bytes 5 - 8: Message Timestamp (seconds since epoch)
@@ -41,6 +43,7 @@ int = 0) -> bytes:
     # Add the checksum to the message
     checksum = binascii.crc_hqx(msg, 0)
     msg.extend(checksum.to_bytes(2, 'big'))
+    # print(msg)
     return bytes(msg)
 
 
@@ -62,7 +65,7 @@ def csv_serial_send(csv, ser):
     for chunk in chunks(text, 0xfff1):
         encoding = encoder(chunk)
         encoded_messages.append(encoding)
-        print(encoding)
+        # print(encoding)
         ser.write(encoding)
         time.sleep(1)
     return encoded_messages
@@ -83,7 +86,7 @@ ser = serial.Serial(
     bytesize=serial.EIGHTBITS,
     timeout=1
 )
-
+# ser = 0
 # print(ser.name)
 # print(ser.baudrate)
 try:
@@ -102,7 +105,7 @@ try:
     # print(read)
     # if ser.in_waiting > 0:
     #     available = ser.read(ser.in_waiting)
-    ser.close()
+    # ser.close()
 
 except Exception as e:
     print(f"{e}")
