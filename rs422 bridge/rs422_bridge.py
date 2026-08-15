@@ -90,9 +90,10 @@ try:
     # message = message.encode('ascii')
     messages = csv_to_aegis_encoding('flower_bot_training_sunroom_7am_wet.csv')
     for message in messages:
+        print(message)
         ser.write(message)
-        data = ser.read(0xfff1)
-        print(f"read bytes in buffer:{data}")
+        # data = ser.read(0xfff1)
+        # print(f"read bytes in buffer:{data}")
         time.sleep(1)
     # #time.sleep(1)
 
