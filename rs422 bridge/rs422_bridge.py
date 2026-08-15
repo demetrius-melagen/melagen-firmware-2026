@@ -6,7 +6,7 @@ import time
 from typing import Union
 
 #aegis encoding function
-def encode(data: Union[bytes, str, None] = None, deviceID: int = 0, messageID:
+def aegis_encode(data: Union[bytes, str, None] = None, deviceID: int = 0, messageID:
 int = 0) -> bytes:
     '''
     Encode a Message. If 'data' is of type str, it will be converted to a byte string
@@ -60,12 +60,12 @@ def csv_to_aegis_encoding(csv):
 
     for chunk in chunks(text, 0xfff1):
         # do something with the chunk
-        encoding = encode(chunk)
+        encoding = aegis_encode(chunk)
         print(encoding)
     return encoding
 
 
-csv_to_aegis_encoding('flower_bot_training_sunroom_7am_wet.csv')
+message = csv_to_aegis_encoding('flower_bot_training_sunroom_7am_wet.csv')
 # Source - https://stackoverflow.com/q/78199772
 # Posted by Ondřej Hojný, modified by community. See post 'Timeline' for change history
 # Retrieved 2026-08-15, License - CC BY-SA 4.0
@@ -81,14 +81,22 @@ ser = serial.Serial(
     timeout=1
 )
 
-print(ser.name)
-print(ser.baudrate)
+# print(ser.name)
+# print(ser.baudrate)
+try:
+    #some code that may throw an exception
+    # message = 'GETINFO'
+    # message = message.encode('ascii')
+    ser.write(message)
+    # #time.sleep(1)
 
-message = 'GETINFO'
-message = message.encode('ascii')
-ser.write(message)
-#time.sleep(1)
+    read = ser.read(100)
+    print(read)
+    ser.close()
 
-read = ser.read(100)
-print(read)
-ser.close()
+except Exception as e:
+    #exception handling code
+    print(f"{e}")
+
+
+
