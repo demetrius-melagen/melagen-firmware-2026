@@ -48,7 +48,7 @@ def chunks(a, chunk_size):
     for i in range(0, len(a), chunk_size):
         yield a[i : i + chunk_size]
 
-def csv_to_aegis_encoding(csv):
+def csv_serial_send(csv, ser):
     with open(csv, 'r', encoding='utf-8') as file:
         text = file.read()
     
@@ -60,10 +60,11 @@ def csv_to_aegis_encoding(csv):
     encoded_messages = []
 
     for chunk in chunks(text, 0xfff1):
-        # do something with the chunk
         encoding = encoder(chunk)
         encoded_messages.append(encoding)
-        # print(encoding)
+        print(encoding)
+        ser.write(encoding)
+        time.sleep(1)
     return encoded_messages
 
 
@@ -88,14 +89,14 @@ ser = serial.Serial(
 try:
     # message = 'GETINFO'
     # message = message.encode('ascii')
-    messages = csv_to_aegis_encoding('flower_bot_training_sunroom_7am_wet.csv')
-    for message in messages:
-        print(message)
-        ser.write(message)
-        # data = ser.read(0xfff1)
-        # print(f"read bytes in buffer:{data}")
-        time.sleep(1)
-    # #time.sleep(1)
+    messages = csv_serial_send('flower_bot_training_sunroom_7am_wet.csv', ser)
+    # for message in messages:
+    #     print(message)
+    #     ser.write(message)
+    #     # data = ser.read(0xfff1)
+    #     # print(f"read bytes in buffer:{data}")
+    #     time.sleep(1)
+    # # #time.sleep(1)
 
     # read = ser.read(100)
     # print(read)
