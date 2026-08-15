@@ -89,7 +89,7 @@ ser = serial.Serial(
 try:
     # message = 'GETINFO'
     # message = message.encode('ascii')
-    messages = csv_serial_send('flower_bot_training_sunroom_7am_wet.csv', ser)
+    messages = csv_serial_send('flower_bot_training_template.csv', ser)
     # for message in messages:
     #     print(message)
     #     ser.write(message)
