@@ -72,7 +72,6 @@ csv_to_aegis_encoding('flower_bot_training_sunroom_7am_wet.csv')
 
 import serial
 import time
-
 ser = serial.Serial(
     port='/dev/ttyTHS1',
     baudrate = 115200,
