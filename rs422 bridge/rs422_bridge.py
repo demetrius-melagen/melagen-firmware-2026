@@ -101,10 +101,17 @@ try:
 
     # Find RADFET CSV files in the top-level directory
     csv_files = list(dir_path.glob("radfet_*.csv"))
+    # Sort from oldest to newest
+    csv_files = sorted(csv_files, key=get_log_datetime)
 
     for csv_file in csv_files:
         print(csv_file)
-    
+
+    # second_to_last = csv_serial_send(csv_files[-2])
+    # print("new file created, sending previous file")
+    # for message in second_to_last:
+    #     print(message)
+
     # message = 'GETINFO'
     # message = message.encode('ascii')
     messages = csv_serial_send('flower_bot_training_template.csv', ser)
