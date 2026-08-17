@@ -112,14 +112,14 @@ def write_error_log(error_code, error_message):
 
 
 # ==========================================================
-# Daily CSV File Management
+# Hourly CSV File Management
 # ==========================================================
-def build_daily_filename(base_dir):
-    """Return one fixed sensor-log filename for the current calendar day."""
+def build_hourly_filename(base_dir):
+    """Return one fixed sensor-log filename for the current calendar hour."""
     try:
         os.makedirs(base_dir, exist_ok=True)
-        date_string = datetime.now().strftime("%Y-%m-%d")
-        return os.path.join(base_dir, f"radfet_{date_string}.csv")
+        date_time_string = datetime.now().strftime("%Y-%m-%d_%H-00")
+        return os.path.join(base_dir, f"radfet_{date_time_string}.csv")
     except Exception as error:
         write_error_log("LOG_DIR_ERROR", f"Cannot access {base_dir}: {error}")
         return None
@@ -185,11 +185,11 @@ def safe_write_logger(logger, row, logger_name):
 
 
 def update_log_files(loggers):
-    """Open or rotate sensor logs when the calendar day changes."""
+    """Open or rotate sensor logs when the calendar hour changes."""
     try:
         destinations = {
-            "primary": build_daily_filename(PRIMARY_LOG_DIR),
-            "backup": build_daily_filename(BACKUP_LOG_DIR),
+            "primary": build_hourly_filename(PRIMARY_LOG_DIR),
+            "backup": build_hourly_filename(BACKUP_LOG_DIR),
         }
 
         for logger_name, filename in destinations.items():

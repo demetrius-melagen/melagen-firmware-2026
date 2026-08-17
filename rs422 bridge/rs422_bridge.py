@@ -46,7 +46,6 @@ int = 0) -> bytes:
     # print(msg)
     return bytes(msg)
 
-
 def chunks(a, chunk_size):
     for i in range(0, len(a), chunk_size):
         yield a[i : i + chunk_size]
