@@ -4,6 +4,8 @@
 import binascii
 import time
 from typing import Union
+from datetime import datetime
+from pathlib import Path
 
 #aegis encoding function
 def encoder(data: Union[bytes, str, None] = None, deviceID: int = 0, messageID:
@@ -69,7 +71,12 @@ def csv_serial_send(csv, ser):
         time.sleep(1)
     return encoded_messages
 
-
+def get_log_datetime(file_path):
+    """Extract the date and hour from radfet_YYYY-MM-DD_HH-00.csv."""
+    return datetime.strptime(
+        file_path.stem,
+        "radfet_%Y-%m-%d_%H-%M",
+    )
 
 # Source - https://stackoverflow.com/q/78199772
 # Posted by Ondřej Hojný, modified by community. See post 'Timeline' for change history
@@ -89,6 +96,15 @@ ser = serial.Serial(
 # print(ser.name)
 # print(ser.baudrate)
 try:
+    # Set your target directory path
+    dir_path = Path.cwd()
+
+    # Find RADFET CSV files in the top-level directory
+    csv_files = list(dir_path.glob("radfet_*.csv"))
+
+    for csv_file in csv_files:
+        print(csv_file)
+    
     # message = 'GETINFO'
     # message = message.encode('ascii')
     messages = csv_serial_send('flower_bot_training_template.csv', ser)
