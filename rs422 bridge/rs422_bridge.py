@@ -96,41 +96,37 @@ ser = serial.Serial(
 # print(ser.name)
 # print(ser.baudrate)
 try:
-    # Set your target directory path
-    dir_path = Path.cwd()
+    # rs422_bridge.py is in:
+    # melagen-firmware-2026/rs422 bridge/
+    project_dir = Path(__file__).resolve().parent.parent
+    log_dir = project_dir / "radfet_logs"
 
-    # Find RADFET CSV files in the top-level directory
-    csv_files = list(dir_path.glob("radfet_*.csv"))
-    # Sort from oldest to newest
-    csv_files = sorted(csv_files, key=get_log_datetime)
+    # Find and chronologically sort RADFET logs
+    csv_files = sorted(
+        log_dir.glob("radfet_*.csv"),
+        key=get_log_datetime,
+    )
 
-    for csv_file in csv_files:
-        print(csv_file)
+    if not csv_files:
+        print(f"No RADFET log files found in: {log_dir}")
 
-    # second_to_last = csv_serial_send(csv_files[-2])
-    # print("new file created, sending previous file")
-    # for message in second_to_last:
-    #     print(message)
+    else:
+        print("RADFET log files, oldest to newest:")
+        for csv_file in csv_files:
+            print(csv_file)
 
-    # message = 'GETINFO'
-    # message = message.encode('ascii')
-    messages = csv_serial_send('flower_bot_training_template.csv', ser)
-    # for message in messages:
-    #     print(message)
-    #     ser.write(message)
-    #     # data = ser.read(0xfff1)
-    #     # print(f"read bytes in buffer:{data}")
-    #     time.sleep(1)
-    # # #time.sleep(1)
+        # The newest file may still be receiving measurements.
+        # Send the second-newest completed file when possible.
+        # if len(csv_files) >= 2:
+        #     file_to_send = csv_files[-2]
+        # else:
+        #     file_to_send = csv_files[-1]
 
-    # read = ser.read(100)
-    # print(read)
-    # if ser.in_waiting > 0:
-    #     available = ser.read(ser.in_waiting)
-    # ser.close()
+        print(f"Sending: {csv_files[-2]}")
+        messages = csv_serial_send(csv_files[-2], ser)
+        print(f"Sending: {csv_files[-1]}")
+        messages = csv_serial_send(csv_files[-1], ser)
+
 
 except Exception as e:
-    print(f"{e}")
-
-
-
+    print(f"Error: {e}")
