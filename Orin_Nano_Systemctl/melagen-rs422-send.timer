@@ -1,0 +1,11 @@
+[Unit]
+Description=Send RADFET deltas every 5 min, 5s after a dosimeter write (M0/M5:05)
+
+[Timer]
+OnCalendar=*-*-* *:00/5:05
+AccuracySec=1s
+Persistent=true
+Unit=melagen-rs422-send.service
+
+[Install]
+WantedBy=timers.target

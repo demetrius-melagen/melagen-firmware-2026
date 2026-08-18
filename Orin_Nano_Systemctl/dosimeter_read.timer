@@ -1,0 +1,12 @@
+# MELAGEN [AI-deployed, approved by Daniel 2026-08-17]
+[Unit]
+Description=MELAGEN dosimeter read every 60s
+
+[Timer]
+OnBootSec=60s
+OnUnitActiveSec=60s
+AccuracySec=10ms
+Unit=dosimeter_read.service
+
+[Install]
+WantedBy=timers.target
