@@ -1,0 +1,11 @@
+[Unit]
+Description=MELAGEN RS-422 incremental sender (one cycle)
+RequiresMountsFor=/media/Data/Melagen
+
+[Service]
+Type=oneshot
+ExecStartPre=/bin/mkdir -p /media/Data/Melagen/logs
+ExecStart=/usr/bin/python3 "/media/Data/Melagen/melagen-firmware-2026/rs422 bridge/mlg_rs422_sender.py" --once
+StandardOutput=append:/media/Data/Melagen/logs/rs422_send.log
+StandardError=append:/media/Data/Melagen/logs/rs422_send.log
+RuntimeMaxSec=150

@@ -1,0 +1,13 @@
+# MELAGEN [AI-deployed, approved by Daniel 2026-08-17]
+# Supersedes /media/Data/Melagen/Orin_Nano_Systemctl/dosimeter_read.service.
+# Kept as a REAL FILE here (was a symlink onto /media/Data) so the unit stays
+# loadable even if the nofail data volume is late or degraded. Edit THIS file.
+[Unit]
+Description=MELAGEN dosimeter read (one pass over the 5 RADFETs)
+RequiresMountsFor=/media/Data/Melagen
+
+[Service]
+Type=simple
+Environment=PYTHONPATH=/home/melagen2/.local/lib/python3.10/site-packages
+WorkingDirectory=/media/Data/Melagen
+ExecStart=/usr/bin/python3 /media/Data/Melagen/melagen_read_sensors.py

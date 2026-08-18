@@ -1,0 +1,19 @@
+# MELAGEN [AI-deployed, approved by Daniel 2026-08-18]
+[Unit]
+Description=MELAGEN RS-422 receiver and clock discipline
+# Ordered AFTER timesyncd so the saved-floor restore lands before we
+# start following the flight computer.
+After=systemd-timesyncd.service network.target
+Wants=systemd-timesyncd.service
+
+[Service]
+Type=simple
+ExecStartPre=/bin/mkdir -p /var/log/melagen
+ExecStart=/usr/bin/python3 /usr/local/sbin/mlg_rs422_recv.py
+Restart=always
+RestartSec=5
+StandardOutput=append:/var/log/melagen/rs422_recv.log
+StandardError=append:/var/log/melagen/rs422_recv.log
+
+[Install]
+WantedBy=multi-user.target
